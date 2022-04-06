@@ -1751,6 +1751,17 @@ class RandomHeightTest(test_combinations.TestCase):
         img_out = layer(img, training=True)
         self.assertEqual(img_out.shape[0], 3)
 
+  def test_augment_image(self):
+    # need (maxval - minval) * rnd + minval = 0.6
+    mock_factor = 0.6
+    with test_utils.use_gpu():
+      img = np.random.random((5, 8, 3))
+      layer = image_preprocessing.RandomHeight(.4)
+      with tf.compat.v1.test.mock.patch.object(
+          layer._random_generator, 'random_uniform', return_value=mock_factor):
+        img_out = layer.augment_image(img, transformation=None)
+        self.assertEqual(img_out.shape[0], 3)
+
   @test_utils.run_v2_only
   def test_output_dtypes(self):
     inputs = np.array([[[1], [2]], [[3], [4]]], dtype='float64')
