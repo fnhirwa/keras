@@ -234,6 +234,28 @@ class MultiHeadAttentionTest(test_combinations.TestCase):
         keras.backend.eval(train_out),
         keras.backend.eval(test_out))
 
+  def test_ragged_tensor(self):
+    # Ragged tensors with shape [3, None, 2].
+    query = tf.ragged.constant(
+        [[[3., 1.], [4., 1.]], [[5., 9.], [2., 6.], [3., 1.]], [[1., 2.]]],
+        inner_shape=(2,))
+    value = tf.ragged.constant(
+        [[[3., 1., 1.], [4., 1., 1.]],
+         [[5., 9., 1.]],
+         [[1., 2., 1.]]],
+        inner_shape=(3,))
+    key = tf.ragged.constant(
+        [[[3., 1., 1.], [4., 1., 1.]],
+         [[5., 9., 1.], [2., 6., 1.], [3., 1., 1.], [1., 5., 1.]],
+         [[1., 2., 1.]]],
+        inner_shape=(3,))
+    test_layer = keras.layers.MultiHeadAttention(num_heads=5, key_dim=3)
+
+    results = test_layer(query, value, key)
+
+    self.assertIsInstance(results, tf.RaggedTensor)
+    self.assertAllEqual(results.shape.as_list(), [3, None, 2])
+
 
 class SubclassAttention(keras.layers.MultiHeadAttention):
 
